@@ -22,7 +22,17 @@ fi
 
 # Railway mounts the volume root-owned with a lost+found directory, so everything
 # lives in subdirectories rather than at the mount point.
-mkdir -p "${SETTINGS_DIR}" "${HOME}" "${NPM_CONFIG_PREFIX:-/data/npm-global}"
+mkdir -p "${SETTINGS_DIR}" "${HOME}" "${NPM_CONFIG_PREFIX:-/data/npm-global}" \
+         "${MISE_DATA_DIR:-/data/mise}" "${MISE_CONFIG_DIR:-/data/mise/config}" \
+         "${MISE_CACHE_DIR:-/data/mise/cache}"
+
+# mise shims are already on PATH, which is enough for non-interactive use. Activation
+# additionally applies per-directory .mise.toml environments in interactive shells.
+# Seeded once, guarded by a marker, so an edited .bashrc is never clobbered.
+if ! grep -q 'mise activate' "${HOME}/.bashrc" 2>/dev/null; then
+    printf '\n# added by the Railway entrypoint\neval "$(mise activate bash)"\n' >> "${HOME}/.bashrc"
+    echo "tlbx: seeded mise activation into ${HOME}/.bashrc"
+fi
 
 # --fingerprint succeeds only when a certificate is already configured, which makes
 # it a filename-independent way to ask "do I need to generate one?". The certificate

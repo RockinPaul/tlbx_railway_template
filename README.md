@@ -28,6 +28,7 @@ run inside tlbx (Claude Code, Codex, Gemini CLI, OpenCode) are npm packages.
 | `tlbx` | `TLBX_SETTINGS_DIR` | `/data/tlbx` | Baked. All state — settings, secrets, certificate — lives here. |
 | `tlbx` | `HOME` | `/data/home` | Baked. Your shell home, on the volume. |
 | `tlbx` | `NPM_CONFIG_PREFIX` | `/data/npm-global` | Baked. `npm i -g` survives redeploys. |
+| `tlbx` | `MISE_DATA_DIR` | `/data/mise` | Baked. Toolchains installed with mise survive redeploys. |
 
 `TLBX_PASSWORD` is reapplied on every boot, so it is the single source of truth. A password changed
 in the web UI is reset by the next redeploy — change it in Railway instead.
@@ -40,6 +41,9 @@ scratch container:
 - `/data/home` — your shell home: repositories, dotfiles, SSH keys, agent configuration.
 - `/data/npm-global` — globally installed npm packages, so `npm i -g @anthropic-ai/claude-code`
   survives a redeploy.
+- `/data/mise` — toolchains installed with [mise](https://mise.jdx.dev). The image ships Node only;
+  `mise use -g python@3.13` (or go, rust, a different node) gets you the rest without rebuilding it,
+  and the shims directory is already on `PATH`.
 - `/data/tlbx` — tlbx's own settings, secrets and self-signed certificate.
 
 **Sessions do not persist.** Files survive a redeploy; running shells and agent sessions do not.
@@ -63,6 +67,18 @@ not:
   the browser `ws://` URLs that an `https` page refuses as mixed content.
 - **The volume arrives root-owned with a `lost+found`.** Everything lives in subdirectories, created
   by the entrypoint, never at the mount root.
+
+## What does not work here
+
+Two upstream features do not survive the move to Railway. Both are platform limits, not bugs:
+
+- **App preview.** tlbx serves previews from a second listener on `PORT + 1` and tells the browser
+  to fetch them from `scheme://<the host you used>:8081` — `previewPort = mainPort + 1` in
+  `BrowserPreviewOriginService.Create`, with no setting to override the origin. Railway's edge only
+  answers on 443, so that URL can never resolve. To look at a dev server running in the box, add an
+  explicit route for it to the Caddyfile.
+- **Docker inside the box.** Railway containers are not privileged, so agents that want to build or
+  run containers cannot. Everything else in a normal toolchain works.
 
 ## Security
 
@@ -109,7 +125,7 @@ Neither is a reason not to run it yourself.
 ## Files
 
 ```
-tlbx/Dockerfile      pinned release binary, verified by sha256, on a Node base
+tlbx/Dockerfile      pinned release binary + mise, both verified by sha256, on a Node base
 tlbx/entrypoint.sh   refuses a missing or short password, seeds cert and password, execs mt
 tlbx/railway.json    watch patterns, single replica
 caddy/Caddyfile      health endpoint, HTTPS upstream, Host and X-Forwarded-Proto handling
