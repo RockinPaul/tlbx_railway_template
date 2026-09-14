@@ -4,8 +4,7 @@ A browser-reachable workstation: [tlbx](https://github.com/tlbx-ai/tlbx) — per
 coding-agent sessions in a browser — behind a Caddy gateway, with a volume that keeps your home
 directory, repositories and tool installs across redeploys.
 
-This is a personal deployment, not a published Railway template. See
-[Why this is not published](#why-this-is-not-published).
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/tlbx)
 
 ## Services
 
@@ -22,13 +21,17 @@ run inside tlbx (Claude Code, Codex, Gemini CLI, OpenCode) are npm packages.
 
 | Service | Variable | Default | Purpose |
 |---|---|---|---|
-| `tlbx` | `TLBX_PASSWORD` | **you supply** | Login password. At least 15 characters — tlbx's own minimum. The container refuses to start without it. |
+| `tlbx` | `TLBX_PASSWORD` | generated (48 chars) | Login password. Read it from this service's variables after deploying. At least 15 characters — tlbx's own minimum — and the container refuses to start without it. |
 | `tlbx` | `PORT` | `8080` | Baked into the image. |
 | `tlbx` | `TLBX_BIND` | `::` | Baked. Dual-stack, for Railway's IPv6 private network. |
 | `tlbx` | `TLBX_SETTINGS_DIR` | `/data/tlbx` | Baked. All state — settings, secrets, certificate — lives here. |
 | `tlbx` | `HOME` | `/data/home` | Baked. Your shell home, on the volume. |
 | `tlbx` | `NPM_CONFIG_PREFIX` | `/data/npm-global` | Baked. `npm i -g` survives redeploys. |
 | `tlbx` | `MISE_DATA_DIR` | `/data/mise` | Baked. Toolchains installed with mise survive redeploys. |
+
+The template asks for nothing: `TLBX_PASSWORD` is generated with `${{secret(48)}}`, which is both
+zero-input and stronger than anything a deploy form would coax out of someone. Read it from the
+`tlbx` service's variables to sign in.
 
 `TLBX_PASSWORD` is reapplied on every boot, so it is the single source of truth. A password changed
 in the web UI is reset by the next redeploy — change it in Railway instead.
@@ -95,7 +98,7 @@ long generated password, and prefer Railway's private networking or a VPN if you
 
 ## First run
 
-1. Set `TLBX_PASSWORD` on the `tlbx` service — 15 characters or more.
+1. Copy `TLBX_PASSWORD` from the `tlbx` service's variables — it was generated for you.
 2. Open the `caddy` service's URL and sign in.
 3. The browser will trust Railway's certificate, not tlbx's. The fingerprint-verification workflow
    in upstream's documentation (`mt --fingerprint`) applies to a direct connection, not to this one:
@@ -109,18 +112,6 @@ Bump `TLBX_VERSION` in `tlbx/Dockerfile` **and** the matching `TLBX_SHA256_*` di
 
 Upstream releases several times a day and marks most of them prerelease; pin a stable tag. At the
 time of writing that is `v10.16.2`, and only five of the last hundred releases were stable.
-
-## Why this is not published
-
-It was evaluated as a Railway marketplace template and built as a personal deployment instead, for
-two reasons that are about the project, not the platform:
-
-- **Release cadence.** 31 releases in 7 days, 95 of the last 100 marked prerelease. A published
-  listing means bumping and re-verifying roughly twice a week, indefinitely.
-- **Railway redeploys end every session**, which is the feature tlbx is sold on. Acceptable for a
-  box you own and understand; a sharp edge to hand strangers behind a one-click button.
-
-Neither is a reason not to run it yourself.
 
 ## Files
 
