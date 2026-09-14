@@ -72,6 +72,16 @@ ENV PORT=8080 \
     MISE_YES=1 \
     PATH=/data/mise/shims:/data/npm-global/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
 
+# A login shell runs /etc/profile, which rebuilds PATH from scratch and discards the
+# ENV above. tlbx spawns plain (non-login) bash so its terminals are unaffected, but
+# `bash -l` would silently lose the mise shims and npm prefix without this.
+RUN printf '%s\n' \
+    'case ":$PATH:" in' \
+    '  *:/data/mise/shims:*) ;;' \
+    '  *) PATH="/data/mise/shims:/data/npm-global/bin:$PATH"; export PATH ;;' \
+    'esac' \
+    > /etc/profile.d/10-workstation-path.sh
+
 WORKDIR /data/home
 EXPOSE 8080
 
