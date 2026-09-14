@@ -1,0 +1,36 @@
+{
+	admin off
+	# Railway terminates TLS at its edge and speaks plain HTTP to this container.
+	auto_https off
+}
+
+:{$PORT} {
+	# Answered by Caddy itself: the platform health check speaks plain HTTP and must
+	# never be sent to tlbx, which serves HTTPS only and would redirect it to a login.
+	handle /up {
+		respond "ok" 200
+	}
+
+	handle {
+		# tlbx serves HTTPS with a certificate it generates for itself, so the hop is
+		# encrypted but unverifiable by name. It is reachable only on Railway's private
+		# network, and only from this gateway.
+		reverse_proxy https://tlbx.railway.internal:8080 {
+			transport http {
+				tls
+				tls_insecure_skip_verify
+			}
+
+			# RequestOriginPolicy.cs compares the browser's Origin against request.Host
+			# (scheme, host AND port). Caddy's TLS transport rewrites Host to the upstream
+			# address, which makes every browser WebSocket look cross-site and return 403,
+			# so the client's Host is restored verbatim here. Use {http.request.hostport},
+			# not {host}: {host} drops the port and breaks any non-443 deployment.
+			header_up Host {http.request.hostport}
+			# Without X-Forwarded-Proto it hands the browser ws:// URLs that a page loaded
+			# over https refuses as mixed content.
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+}
