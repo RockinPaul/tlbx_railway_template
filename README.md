@@ -111,7 +111,7 @@ long generated password, and prefer Railway's private networking or a VPN if you
 Bump `TLBX_VERSION` in `tlbx/Dockerfile` **and** the matching `TLBX_SHA256_*` digests, then push.
 
 Upstream releases several times a day and marks most of them prerelease; pin a stable tag. At the
-time of writing that is `v10.16.2`, and only five of the last hundred releases were stable.
+time of writing that is `v10.22.0`, and only five of the last hundred releases were stable.
 
 ## Files
 

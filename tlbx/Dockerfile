@@ -5,11 +5,11 @@
 # people run inside tlbx (Claude Code, Codex, Gemini CLI, OpenCode) are npm packages.
 FROM node:22-bookworm-slim
 
-ARG TLBX_VERSION=v10.16.2
+ARG TLBX_VERSION=v10.22.0
 # sha256 of the release tarball itself. The SHA256SUMS.txt inside the archive only
 # checks the archive against itself, so it is not a supply-chain check on the download.
-ARG TLBX_SHA256_AMD64=20e6f24046d8bdabe8cf4cef717d2d190e0c94f21f32636debb61b000a8a48d2
-ARG TLBX_SHA256_ARM64=f5be88265405f63a9b998d2023b43d0aeb5660cadaf5e6c7c10573a87ae4e078
+ARG TLBX_SHA256_AMD64=0da73447ac16f1e9a5e4577a2fb99cf46b71bae563df535a01f50447eb7f3691
+ARG TLBX_SHA256_ARM64=3908103b42de0730cd3efcbd86cbbb1f04b2b16dda622df9d8cee88902c1be08
 # mise gives the box any toolchain (python, go, rust, another node) without rebuilding
 # this image. Its data lives under HOME, which is on the volume, so installs persist.
 ARG MISE_VERSION=v2026.10.24
