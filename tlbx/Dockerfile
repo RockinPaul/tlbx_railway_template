@@ -12,9 +12,9 @@ ARG TLBX_SHA256_AMD64=20e6f24046d8bdabe8cf4cef717d2d190e0c94f21f32636debb61b000a
 ARG TLBX_SHA256_ARM64=f5be88265405f63a9b998d2023b43d0aeb5660cadaf5e6c7c10573a87ae4e078
 # mise gives the box any toolchain (python, go, rust, another node) without rebuilding
 # this image. Its data lives under HOME, which is on the volume, so installs persist.
-ARG MISE_VERSION=v2026.10.11
-ARG MISE_SHA256_AMD64=a7d0aad3d6782d42675fe0a2732b39bfc356f6cf2b554437f84c597814a2fd85
-ARG MISE_SHA256_ARM64=7534d514495449e267997410583833080ed0b99a0053f3b26a10691794a597b5
+ARG MISE_VERSION=v2026.10.24
+ARG MISE_SHA256_AMD64=9a6c9c55f5c6372d0af70a9979fe6d742aea3793267a929e1738022143c466cc
+ARG MISE_SHA256_ARM64=8c8f5d7f748bf3aef431dc50f0ad776270f36025c788aa21c74e2fabdbbd6d3e
 ARG TARGETARCH
 
 # The tlbx binaries are .NET 10 Native AOT and need only libc and libm. Everything
