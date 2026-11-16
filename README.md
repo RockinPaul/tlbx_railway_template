@@ -10,7 +10,7 @@ directory, repositories and tool installs across redeploys.
 
 | Service | Image | Public | Role |
 |---|---|---|---|
-| `caddy` | `caddy:2.11-alpine` | **yes** | The only way in. Terminates Railway's plain HTTP and proxies to tlbx over HTTPS. |
+| `caddy` | `caddy:2.11.9-alpine` | **yes** | The only way in. Terminates Railway's plain HTTP and proxies to tlbx over HTTPS. |
 | `tlbx` | `node:22-bookworm-slim` + pinned `mt` binary | no | The server, your shells, and the volume at `/data`. |
 
 Upstream publishes no container image, so `tlbx/Dockerfile` installs the signed release binary and
@@ -120,7 +120,7 @@ tlbx/Dockerfile      pinned release binary + mise, both verified by sha256, on a
 tlbx/entrypoint.sh   refuses a missing or short password, seeds cert and password, execs mt
 tlbx/railway.json    watch patterns, single replica
 caddy/Caddyfile      health endpoint, HTTPS upstream, Host and X-Forwarded-Proto handling
-caddy/Dockerfile     caddy:2.11-alpine
+caddy/Dockerfile     caddy:2.11.9-alpine
 caddy/railway.json   watch patterns, /up health check
 ```
 
