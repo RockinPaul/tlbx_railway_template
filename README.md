@@ -10,10 +10,10 @@ directory, repositories and tool installs across redeploys.
 
 | Service | Image | Public | Role |
 |---|---|---|---|
-| `caddy` | `caddy:2.11-alpine` | **yes** | The only way in. Terminates Railway's plain HTTP and proxies to tlbx over HTTPS. |
+| `caddy` | `caddy:2.11.9-alpine` | **yes** | The only way in. Terminates Railway's plain HTTP and proxies to tlbx over HTTPS. |
 | `tlbx` | `node:22-bookworm-slim` + pinned `mt` binary | no | The server, your shells, and the volume at `/data`. |
 
-Upstream publishes no container image, so `tlbx/Dockerfile` installs the signed release binary and
+This pins tlbx **v11.1.8**. Upstream publishes no container image, so `tlbx/Dockerfile` installs the release archive and
 verifies it against a pinned sha256. The base is a Node image on purpose: the coding agents people
 run inside tlbx (Claude Code, Codex, Gemini CLI, OpenCode) are npm packages.
 
@@ -21,7 +21,7 @@ run inside tlbx (Claude Code, Codex, Gemini CLI, OpenCode) are npm packages.
 
 | Service | Variable | Default | Purpose |
 |---|---|---|---|
-| `tlbx` | `TLBX_PASSWORD` | generated (48 chars) | Login password. Read it from this service's variables after deploying. At least 15 characters — tlbx's own minimum — and the container refuses to start without it. |
+| `tlbx` | `TLBX_PASSWORD` | generated (48 chars) | Login password. Read it from this service's variables after deploying. Upstream accepts 10–1024 characters; the container refuses a missing or short password. |
 | `tlbx` | `PORT` | `8080` | Baked into the image. |
 | `tlbx` | `TLBX_BIND` | `::` | Baked. Dual-stack, for Railway's IPv6 private network. |
 | `tlbx` | `TLBX_SETTINGS_DIR` | `/data/tlbx` | Baked. All state — settings, secrets, certificate — lives here. |
@@ -38,7 +38,7 @@ in the web UI is reset by the next redeploy — change it in Railway instead.
 
 ## What persists
 
-The volume is mounted at `/data` and holds three things that make this a workstation rather than a
+The volume is mounted at `/data` and holds the things that make this a workstation rather than a
 scratch container:
 
 - `/data/home` — your shell home: repositories, dotfiles, SSH keys, agent configuration.
@@ -73,25 +73,23 @@ not:
 
 ## What does not work here
 
-Two upstream features do not survive the move to Railway. Both are platform limits, not bugs:
+**Docker inside the box.** Railway containers are not privileged, so agents that want to build or
+run containers cannot.
 
-- **App preview.** tlbx serves previews from a second listener on `PORT + 1` and tells the browser
-  to fetch them from `scheme://<the host you used>:8081` — `previewPort = mainPort + 1` in
-  `BrowserPreviewOriginService.Create`, with no setting to override the origin. Railway's edge only
-  answers on 443, so that URL can never resolve. To look at a dev server running in the box, add an
-  explicit route for it to the Caddyfile.
-- **Docker inside the box.** Railway containers are not privileged, so agents that want to build or
-  run containers cannot. Everything else in a normal toolchain works.
+App previews in v11.1.8 share the main listener and derive their origin from the request's scheme
+and Host. They no longer require a second public port; Caddy forwards the preview routes along
+with the rest of the app. Local Connect is optional: ordinary password login through Caddy needs
+no peer pairing.
 
 ## Security
 
 This service is a shell on a public URL. Treat it accordingly.
 
 tlbx itself is fail-closed and unusually strict, which is the main reason this was worth building:
-HTTPS and a password are mandatory and cannot be disabled, passwords are 15–1024 characters hashed
+HTTPS and a password are mandatory and cannot be disabled, passwords are 10–1024 characters hashed
 with PBKDF2-HMAC-SHA256 at 600,000 iterations, failed attempts trigger accumulating lockouts, and
 browser mutations and WebSocket handshakes are same-origin checked. The entrypoint refuses to start
-without `TLBX_PASSWORD`, and refuses a password under 15 characters.
+without `TLBX_PASSWORD`, and refuses a password under 10 characters.
 
 Upstream scopes remote access to a trusted LAN or a private VPN. A Railway domain is neither. Use a
 long generated password, and prefer Railway's private networking or a VPN if you can.
@@ -111,7 +109,13 @@ long generated password, and prefer Railway's private networking or a VPN if you
 Bump `TLBX_VERSION` in `tlbx/Dockerfile` **and** the matching `TLBX_SHA256_*` digests, then push.
 
 Upstream releases several times a day and marks most of them prerelease; pin a stable tag. At the
-time of writing that is `v10.22.0`, and only five of the last hundred releases were stable.
+time of writing this template pins `v11.1.8`.
+
+The archive bundles `mt`, `mthost` and `mtagenthost`, built with .NET 11 Native AOT. No separate
+.NET runtime is installed. The Linux executables link libc and libm; native SQLite and Skia
+libraries are embedded and extracted by tlbx. `TLBX_SETTINGS_DIR`, the startup CLI flags,
+PBKDF2 password storage and persisted certificate handling remain supported in this tag.
+The v11.1.8 archive reports `mt` 11.1.8 and helper versions `mthost` / `mtagenthost` 11.1.7.
 
 ## Files
 
@@ -120,7 +124,7 @@ tlbx/Dockerfile      pinned release binary + mise, both verified by sha256, on a
 tlbx/entrypoint.sh   refuses a missing or short password, seeds cert and password, execs mt
 tlbx/railway.json    watch patterns, single replica
 caddy/Caddyfile      health endpoint, HTTPS upstream, Host and X-Forwarded-Proto handling
-caddy/Dockerfile     caddy:2.11-alpine
+caddy/Dockerfile     caddy:2.11.9-alpine
 caddy/railway.json   watch patterns, /up health check
 ```
 
