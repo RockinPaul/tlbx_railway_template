@@ -12,11 +12,11 @@ if [ -z "${TLBX_PASSWORD:-}" ]; then
     exit 1
 fi
 
-# Upstream enforces 15-1024 characters. Check it here so the failure is a clear
+# Upstream enforces 10-1024 characters. Check the minimum here so the failure is a clear
 # log line at boot rather than a rejected --set-password mid-startup.
 len=$(printf '%s' "${TLBX_PASSWORD}" | wc -c | tr -d ' ')
-if [ "${len}" -lt 15 ]; then
-    echo "FATAL: TLBX_PASSWORD is ${len} characters; tlbx requires at least 15." >&2
+if [ "${len}" -lt 10 ]; then
+    echo "FATAL: TLBX_PASSWORD is ${len} characters; tlbx requires at least 10." >&2
     exit 1
 fi
 

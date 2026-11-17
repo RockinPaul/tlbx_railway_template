@@ -1,15 +1,15 @@
 # tlbx — self-hosted browser terminal multiplexer (https://github.com/tlbx-ai/tlbx)
-# Upstream publishes no container image; this installs the signed release binary.
+# Upstream publishes no container image; this installs the digest-checked release archive.
 #
 # Base is a Node image on purpose: this is a workstation, and the coding agents
 # people run inside tlbx (Claude Code, Codex, Gemini CLI, OpenCode) are npm packages.
 FROM node:22-bookworm-slim
 
-ARG TLBX_VERSION=v10.22.0
+ARG TLBX_VERSION=v11.1.8
 # sha256 of the release tarball itself. The SHA256SUMS.txt inside the archive only
 # checks the archive against itself, so it is not a supply-chain check on the download.
-ARG TLBX_SHA256_AMD64=0da73447ac16f1e9a5e4577a2fb99cf46b71bae563df535a01f50447eb7f3691
-ARG TLBX_SHA256_ARM64=3908103b42de0730cd3efcbd86cbbb1f04b2b16dda622df9d8cee88902c1be08
+ARG TLBX_SHA256_AMD64=c7ad8681609c89fe94f5a2a4e1ac02ce35a362f751932b2c6da683f867bbc259
+ARG TLBX_SHA256_ARM64=32922856bb0b2eb9405e17e0d50905e90181ca91b7cb17ed8d7d21fd879a6299
 # mise gives the box any toolchain (python, go, rust, another node) without rebuilding
 # this image. Its data lives under HOME, which is on the volume, so installs persist.
 ARG MISE_VERSION=v2026.11.9
@@ -17,8 +17,8 @@ ARG MISE_SHA256_AMD64=23ba592fcbc61f057e2b82c1eafd085832712ba0c759b714ca16cd06ba
 ARG MISE_SHA256_ARM64=cf2900bfb4279f8d8f8a19d5c27bf1bde826b3e742182f3f67511c588498c786
 ARG TARGETARCH
 
-# The tlbx binaries are .NET 10 Native AOT and need only libc and libm. Everything
-# installed here is workstation tooling, not a tlbx dependency.
+# The release bundles .NET 11 Native AOT executables (mt, mthost, mtagenthost),
+# including embedded native libraries; no separate .NET runtime is required.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates curl git openssh-client tmux \

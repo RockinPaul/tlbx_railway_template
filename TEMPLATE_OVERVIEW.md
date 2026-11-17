@@ -45,9 +45,10 @@ Two services build from this template's repository, each from its own directory:
   self-signed and the hop never leaves Railway's private network. It passes the client's Host
   through verbatim: tlbx compares the browser's Origin against that Host on scheme, host and port,
   so a rewritten Host makes every WebSocket the interface opens fail while the page still loads.
-- **tlbx** — the server and your shells, built on a Node base image because the coding agents people
+- **tlbx v11.1.8** — the server and your shells, built on a Node base image because the coding agents people
   run inside tlbx are npm packages. The upstream project publishes no container image, so the
-  template installs the signed release binary and checks it against a pinned digest. Your home
+  template installs the .NET 11 Native AOT release (`mt`, `mthost`, `mtagenthost`) and checks it
+  against a pinned digest; no separate .NET runtime is needed. Your home
   directory, npm global prefix and mise data all live on the volume.
 
 The password is generated with a Railway secret, so there is nothing to fill in. Read it from the
@@ -55,11 +56,12 @@ tlbx service's variables, then open the gateway's URL and sign in. Installing a 
 `mise use -g python@3.13` puts it on the volume, so it survives redeploys; the image itself ships
 only Node.
 
-Three limits are worth knowing before you deploy. Running sessions end when the service redeploys,
-because a redeploy replaces the host — files on the volume survive, shells do not. The upstream app
-preview feature cannot work here, because it serves previews from a second port and tells the
-browser to fetch them from a URL Railway's edge does not answer. And Railway containers are not
-privileged, so nothing inside can build or run containers.
+Running sessions end when the service redeploys, because a redeploy replaces the host — files on
+the volume survive, shells do not. Railway containers are not privileged, so nothing inside can
+build or run containers. App previews now share tlbx's main listener and use the request's origin,
+so they no longer need a second public port. Local Connect is optional; password login through
+Caddy does not require pairing. Passwords support 10–1024 characters and PBKDF2 storage; the
+generated 48-character password, settings and certificate remain on the volume.
 
 ## Why Deploy tlbx on Railway?
 
