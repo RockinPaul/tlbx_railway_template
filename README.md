@@ -122,10 +122,8 @@ The v11.1.8 archive reports `mt` 11.1.8 and helper versions `mthost` / `mtagenth
 ```
 tlbx/Dockerfile      pinned release binary + mise, both verified by sha256, on a Node base
 tlbx/entrypoint.sh   refuses a missing or short password, seeds cert and password, execs mt
-tlbx/railway.json    watch patterns, single replica
 caddy/Caddyfile      health endpoint, HTTPS upstream, Host and X-Forwarded-Proto handling
 caddy/Dockerfile     caddy:2.11.9-alpine
-caddy/railway.json   watch patterns, /up health check
 ```
 
 ## Licences
